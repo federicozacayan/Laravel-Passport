@@ -1,0 +1,219 @@
+<!DOCTYPE html><html lang="en"><head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Laravel Passport">
+  <title>Laravel Passport</title>
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+  <link href="https://federicozacayan.github.io/tutorial/css/prism.css" rel="stylesheet">
+<style>
+p {
+    margin: 0;
+}
+</style>
+<style>textarea {
+  width: 100%;
+  margin: .5rem auto; }
+
+.buttons button {
+  cursor: pointer;
+  background-color: #00b7ff;
+  padding: .5rem;
+  margin: .5rem;
+  border-radius: 1rem;
+  color: white;
+  text-transform: capitalize;
+  display: inline-block;
+  width: auto; }
+
+button {
+  width: 50%; }
+
+.styler {
+  position: fixed;
+  top: 0;
+  right: 0;
+  padding: 1rem; }
+  .styler .background {
+    position: fixed;
+    background-color: #000;
+    opacity: .5;
+    height: 200px;
+    top: 0;
+    margin-left: -1rem;
+    float: left;
+    width: 100%;
+    z-index: -1;
+    height: 100vh; }
+</style></head>
+
+<body>
+  <noscript>You need to enable JavaScript to run this app.</noscript>
+  <div id="root"><div class="container"><div><div><h1>API Authentication (Passport)</h1><p>To get started, install Passport via the Composer package manager:</p><pre class="  language-html"><code class="  language-html">composer require laravel/passport</code></pre><p>Passport migrations will create the tables your application needs to store clients and access tokens:</p><pre class="  language-javascript"><code class="  language-javascript">php artisan migrate</code></pre><p>Next, you should run the passport:install command.</p><pre class="  language-javascript"><code class="  language-javascript">php artisan passport<span class="token punctuation">:</span>install</code></pre><p>After running this command, add the Laravel\Passport\HasApiTokens trait to your App\User model. This trait will provide a few helper methods to your model which allow you to inspect the authenticated user's token and scopes:</p><pre class="  language-javascript"><code class="  language-javascript">namespace App<span class="token punctuation">;</span>
+use Laravel\Passport\HasApiTokens<span class="token punctuation">;</span>
+use Illuminate\Notifications\Notifiable<span class="token punctuation">;</span>
+use Illuminate\Foundation\Auth\User <span class="token keyword">as</span> Authenticatable<span class="token punctuation">;</span>
+<span class="token keyword">class</span> <span class="token class-name">User</span> <span class="token keyword">extends</span> <span class="token class-name">Authenticatable</span>
+<span class="token punctuation">{</span>
+    use HasApiTokens<span class="token punctuation">,</span> Notifiable<span class="token punctuation">;</span>
+    <span class="token operator">...</span>
+<span class="token punctuation">}</span></code></pre><p>app/Providers/AuthServiceProvider.php</p><pre class="  language-javascript"><code class="  language-javascript"><span class="token operator">&lt;</span><span class="token operator">?</span>php
+namespace App\Providers<span class="token punctuation">;</span>
+use Illuminate\Foundation\Support\Providers\AuthServiceProvider <span class="token keyword">as</span> ServiceProvider<span class="token punctuation">;</span>
+use Illuminate\Support\Facades\Gate<span class="token punctuation">;</span>
+use Laravel\Passport\Passport<span class="token punctuation">;</span> <span class="token comment">// add this line</span>
+<span class="token keyword">class</span> <span class="token class-name">AuthServiceProvider</span> <span class="token keyword">extends</span> <span class="token class-name">ServiceProvider</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">protected</span> $policies <span class="token operator">=</span> <span class="token punctuation">[</span>
+        <span class="token string">'App\Model'</span> <span class="token operator">=&gt;</span> <span class="token string">'App\Policies\ModelPolicy'</span><span class="token punctuation">,</span> <span class="token comment">// uncomment this line</span>
+    <span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">boot</span><span class="token punctuation">(</span><span class="token punctuation">)</span>
+    <span class="token punctuation">{</span>
+        $<span class="token keyword">this</span><span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">registerPolicies</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        Passport<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">routes</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> <span class="token comment">// add this line</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span>
+</code></pre><p>config/auth.php </p><pre class="  language-javascript"><code class="  language-javascript"><span class="token string">'guards'</span> <span class="token operator">=&gt;</span> <span class="token punctuation">[</span>
+    <span class="token string">'web'</span> <span class="token operator">=&gt;</span> <span class="token punctuation">[</span>
+        <span class="token string">'driver'</span> <span class="token operator">=&gt;</span> <span class="token string">'session'</span><span class="token punctuation">,</span>
+        <span class="token string">'provider'</span> <span class="token operator">=&gt;</span> <span class="token string">'users'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+
+    <span class="token string">'api'</span> <span class="token operator">=&gt;</span> <span class="token punctuation">[</span>
+        <span class="token string">'driver'</span> <span class="token operator">=&gt;</span> <span class="token string">'passport'</span><span class="token punctuation">,</span> <span class="token comment">// change this line</span>
+        <span class="token string">'provider'</span> <span class="token operator">=&gt;</span> <span class="token string">'users'</span><span class="token punctuation">,</span>
+<span class="token comment">//      'hash' =&gt; false, // remove this line</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">,</span></code></pre><p>Open config/app.php file and add service provider.</p><pre class="  language-javascript"><code class="  language-javascript"><span class="token keyword">return</span> <span class="token punctuation">[</span>
+    <span class="token operator">...</span>
+    <span class="token string">'providers'</span> <span class="token operator">=&gt;</span><span class="token punctuation">[</span>
+        <span class="token operator">...</span>
+        Laravel\Passport\PassportServiceProvider<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token keyword">class</span><span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">,</span>
+<span class="token punctuation">]</span><span class="token punctuation">;</span></code></pre><p>Passport Configuration app/User.php</p><pre class="  language-javascript"><code class="  language-javascript"><span class="token operator">&lt;</span><span class="token operator">?</span>php
+namespace App<span class="token punctuation">;</span>
+use Illuminate\Contracts\Auth\MustVerifyEmail<span class="token punctuation">;</span>
+use Illuminate\Foundation\Auth\User <span class="token keyword">as</span> Authenticatable<span class="token punctuation">;</span>
+use Illuminate\Notifications\Notifiable<span class="token punctuation">;</span>
+use Laravel\Passport\HasApiTokens<span class="token punctuation">;</span> <span class="token comment">// add this line</span>
+<span class="token keyword">class</span> <span class="token class-name">User</span> <span class="token keyword">extends</span> <span class="token class-name">Authenticatable</span>
+<span class="token punctuation">{</span>
+    use HasApiTokens<span class="token punctuation">,</span> Notifiable<span class="token punctuation">;</span> <span class="token comment">// add HasApiTokens</span>
+    <span class="token keyword">protected</span> $fillable <span class="token operator">=</span> <span class="token punctuation">[</span>
+        <span class="token string">'name'</span><span class="token punctuation">,</span> <span class="token string">'email'</span><span class="token punctuation">,</span> <span class="token string">'password'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token keyword">protected</span> $hidden <span class="token operator">=</span> <span class="token punctuation">[</span>
+        <span class="token string">'password'</span><span class="token punctuation">,</span> <span class="token string">'remember_token'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">;</span>
+    <span class="token keyword">protected</span> $casts <span class="token operator">=</span> <span class="token punctuation">[</span>
+        <span class="token string">'email_verified_at'</span> <span class="token operator">=&gt;</span> <span class="token string">'datetime'</span><span class="token punctuation">,</span>
+    <span class="token punctuation">]</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span>
+</code></pre><p>routes/api.php</p><pre class="  language-javascript"><code class="  language-javascript">Route<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">'login'</span><span class="token punctuation">,</span> <span class="token string">'API\UserController@login'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+Route<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">'register'</span><span class="token punctuation">,</span> <span class="token string">'API\UserController@register'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+
+Route<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">group</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'middleware'</span> <span class="token operator">=&gt;</span> <span class="token string">'auth:api'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token keyword">function</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span>
+    Route<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">post</span><span class="token punctuation">(</span><span class="token string">'details'</span><span class="token punctuation">,</span> <span class="token string">'API\UserController@details'</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+<span class="token punctuation">}</span><span class="token punctuation">)</span><span class="token punctuation">;</span></code></pre><p>Create UserController</p><pre class="  language-javascript"><code class="  language-javascript">php artisan make<span class="token punctuation">:</span>controller UserController</code></pre><p>Then Create login, register and details methods.</p><pre class="  language-javascript"><code class="  language-javascript"><span class="token operator">&lt;</span><span class="token operator">?</span>php
+namespace App\Http\Controllers\<span class="token constant">API</span><span class="token punctuation">;</span>
+use Illuminate\Http\Request<span class="token punctuation">;</span> 
+use App\Http\Controllers\Controller<span class="token punctuation">;</span> 
+use App\User<span class="token punctuation">;</span> 
+use Illuminate\Support\Facades\Auth<span class="token punctuation">;</span> 
+use Validator<span class="token punctuation">;</span>
+<span class="token keyword">class</span> <span class="token class-name">UserController</span> <span class="token keyword">extends</span> <span class="token class-name">Controller</span>
+<span class="token punctuation">{</span>
+    <span class="token keyword">public</span> $successStatus <span class="token operator">=</span> <span class="token number">200</span><span class="token punctuation">;</span>
+    <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">login</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">{</span> 
+        <span class="token keyword">if</span><span class="token punctuation">(</span>Auth<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">attempt</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'email'</span> <span class="token operator">=&gt;</span> <span class="token function">request</span><span class="token punctuation">(</span><span class="token string">'email'</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token string">'password'</span> <span class="token operator">=&gt;</span> <span class="token function">request</span><span class="token punctuation">(</span><span class="token string">'password'</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">)</span><span class="token punctuation">{</span> 
+            $user <span class="token operator">=</span> Auth<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">user</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+            $success<span class="token punctuation">[</span><span class="token string">'token'</span><span class="token punctuation">]</span> <span class="token operator">=</span>  $user<span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">createToken</span><span class="token punctuation">(</span><span class="token string">'MyApp'</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span> accessToken<span class="token punctuation">;</span> 
+            <span class="token keyword">return</span> <span class="token function">response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'success'</span> <span class="token operator">=&gt;</span> $success<span class="token punctuation">]</span><span class="token punctuation">,</span> $<span class="token keyword">this</span><span class="token operator">-</span><span class="token operator">&gt;</span>successStatus<span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        <span class="token punctuation">}</span> 
+        <span class="token keyword">else</span><span class="token punctuation">{</span> 
+            <span class="token keyword">return</span> <span class="token function">response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'error'</span><span class="token operator">=&gt;</span><span class="token string">'Unauthorised'</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">401</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        <span class="token punctuation">}</span> 
+    <span class="token punctuation">}</span>
+    <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">register</span><span class="token punctuation">(</span><span class="token parameter">Request $request</span><span class="token punctuation">)</span> 
+    <span class="token punctuation">{</span> 
+        $validator <span class="token operator">=</span> Validator<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">make</span><span class="token punctuation">(</span>$request<span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">all</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">,</span> <span class="token punctuation">[</span> 
+            <span class="token string">'name'</span> <span class="token operator">=&gt;</span> <span class="token string">'required'</span><span class="token punctuation">,</span> 
+            <span class="token string">'email'</span> <span class="token operator">=&gt;</span> <span class="token string">'required|email'</span><span class="token punctuation">,</span> 
+            <span class="token string">'password'</span> <span class="token operator">=&gt;</span> <span class="token string">'required'</span><span class="token punctuation">,</span> 
+            <span class="token string">'c_password'</span> <span class="token operator">=&gt;</span> <span class="token string">'required|same:password'</span><span class="token punctuation">,</span> 
+        <span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span>
+        <span class="token keyword">if</span> <span class="token punctuation">(</span>$validator<span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">fails</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">)</span> <span class="token punctuation">{</span> 
+            <span class="token keyword">return</span> <span class="token function">response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'error'</span><span class="token operator">=&gt;</span>$validator<span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">errors</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">]</span><span class="token punctuation">,</span> <span class="token number">401</span><span class="token punctuation">)</span><span class="token punctuation">;</span>            
+        <span class="token punctuation">}</span>
+        $input <span class="token operator">=</span> $request<span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">all</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        $input<span class="token punctuation">[</span><span class="token string">'password'</span><span class="token punctuation">]</span> <span class="token operator">=</span> <span class="token function">bcrypt</span><span class="token punctuation">(</span>$input<span class="token punctuation">[</span><span class="token string">'password'</span><span class="token punctuation">]</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        $user <span class="token operator">=</span> User<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">create</span><span class="token punctuation">(</span>$input<span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        $success<span class="token punctuation">[</span><span class="token string">'token'</span><span class="token punctuation">]</span> <span class="token operator">=</span>  $user<span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">createToken</span><span class="token punctuation">(</span><span class="token string">'MyApp'</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span>accessToken<span class="token punctuation">;</span> 
+        $success<span class="token punctuation">[</span><span class="token string">'name'</span><span class="token punctuation">]</span> <span class="token operator">=</span>  $user<span class="token operator">-</span><span class="token operator">&gt;</span>name<span class="token punctuation">;</span>
+        <span class="token keyword">return</span> <span class="token function">response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'success'</span><span class="token operator">=&gt;</span>$success<span class="token punctuation">]</span><span class="token punctuation">,</span> $<span class="token keyword">this</span><span class="token operator">-</span><span class="token operator">&gt;</span>successStatus<span class="token punctuation">)</span><span class="token punctuation">;</span> 
+    <span class="token punctuation">}</span>
+    <span class="token keyword">public</span> <span class="token keyword">function</span> <span class="token function">details</span><span class="token punctuation">(</span><span class="token punctuation">)</span> 
+    <span class="token punctuation">{</span> 
+        $user <span class="token operator">=</span> Auth<span class="token punctuation">:</span><span class="token punctuation">:</span><span class="token function">user</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token punctuation">;</span> 
+        <span class="token keyword">return</span> <span class="token function">response</span><span class="token punctuation">(</span><span class="token punctuation">)</span><span class="token operator">-</span><span class="token operator">&gt;</span><span class="token function">json</span><span class="token punctuation">(</span><span class="token punctuation">[</span><span class="token string">'success'</span> <span class="token operator">=&gt;</span> $user<span class="token punctuation">]</span><span class="token punctuation">,</span> $<span class="token keyword">this</span><span class="token operator">-</span><span class="token operator">&gt;</span>successStatus<span class="token punctuation">)</span><span class="token punctuation">;</span> 
+    <span class="token punctuation">}</span> 
+<span class="token punctuation">}</span>
+</code></pre><p>Test the app using a consumer RestFul API</p><pre class="  language-javascript"><code class="  language-javascript"><span class="token constant">REQUEST</span>
+<span class="token constant">POST</span> localhost<span class="token operator">/</span>api<span class="token operator">/</span>register 
+Body<span class="token punctuation">:</span>
+    name <span class="token string">"jhon"</span>
+    email <span class="token string">"jhon@mail.com"</span>
+    password <span class="token string">"secret"</span>
+    c_password <span class="token string">"secret"</span>
+
+<span class="token constant">RESPONSE</span>
+<span class="token punctuation">{</span>
+    <span class="token string">"success"</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+        <span class="token string">"token"</span><span class="token punctuation">:</span> <span class="token string">"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI..."</span><span class="token punctuation">,</span>
+        <span class="token string">"name"</span><span class="token punctuation">:</span> <span class="token string">"jhon"</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre><pre class="  language-javascript"><code class="  language-javascript"><span class="token constant">REQUEST</span>
+<span class="token constant">POST</span> localhost<span class="token operator">/</span>api<span class="token operator">/</span>login
+Body<span class="token punctuation">:</span>
+    email <span class="token string">"jhon@mail.com"</span>
+    password <span class="token string">"secret"</span>
+
+<span class="token constant">RESPONSE</span>
+<span class="token punctuation">{</span>
+    <span class="token string">"success"</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+        <span class="token string">"token"</span><span class="token punctuation">:</span> <span class="token string">"eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI..."</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre><pre class="  language-javascript"><code class="  language-javascript"><span class="token constant">REQUEST</span>
+<span class="token constant">POST</span> localhost<span class="token operator">/</span>api<span class="token operator">/</span>details
+Header<span class="token punctuation">:</span>
+    Authorization <span class="token string">"Bearer eyJ0eXAiOiJKV1QiLCJhbG..."</span>
+    Accept <span class="token string">"application/json"</span>
+
+<span class="token constant">RESPONSE</span>
+<span class="token punctuation">{</span>
+    <span class="token string">"success"</span><span class="token punctuation">:</span> <span class="token punctuation">{</span>
+        <span class="token string">"id"</span><span class="token punctuation">:</span> <span class="token number">1</span><span class="token punctuation">,</span>
+        <span class="token string">"name"</span><span class="token punctuation">:</span> <span class="token string">"jhon"</span><span class="token punctuation">,</span>
+        <span class="token string">"email"</span><span class="token punctuation">:</span> <span class="token string">"jhon@mail.com"</span><span class="token punctuation">,</span>
+        <span class="token string">"email_verified_at"</span><span class="token punctuation">:</span> <span class="token keyword">null</span><span class="token punctuation">,</span>
+        <span class="token string">"created_at"</span><span class="token punctuation">:</span> <span class="token string">"2020-02-28 10:51:51"</span><span class="token punctuation">,</span>
+        <span class="token string">"updated_at"</span><span class="token punctuation">:</span> <span class="token string">"2020-02-28 10:51:51"</span>
+    <span class="token punctuation">}</span>
+<span class="token punctuation">}</span></code></pre><p>More information in</p><pre class="  language-javascript"><code class="  language-javascript">https<span class="token punctuation">:</span><span class="token operator">/</span><span class="token operator">/</span>laravel<span class="token punctuation">.</span>com<span class="token operator">/</span>docs<span class="token operator">/</span><span class="token number">6.</span>x<span class="token operator">/</span>passport</code></pre></div><div class="styler" style="display: none;"><div class="background"></div><textarea style="margin-top: 8px; margin-bottom: 8px; height: 360px;">namespace App;
+use Laravel\Passport\HasApiTokens;
+use Illuminate\Notifications\Notifiable;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+class User extends Authenticatable
+{
+    use HasApiTokens, Notifiable;
+    ...
+}</textarea><br><button>Duplicate</button><button>Delete</button><br><div class="buttons"><button>h1 </button><button>h2 </button><button>p </button><button>html </button><button>css </button><button>javascript </button><button>php </button></div><label for="up" class="btn btn-primary btn-block btn-outlined">Upload Json</label><input id="up" type="file" accept="text/plain" style="display: none;"><label for="down" class="btn btn-primary btn-block btn-outlined">Download Json</label><button id="down" style="display: none;">Export</button><label for="html" class="btn btn-primary btn-block btn-outlined">Download HTML</label><button id="html" style="display: none;">Export</button></div></div></div></div>
+<script src="/static/js/bundle.js"></script><script src="/static/js/0.chunk.js"></script><script src="/static/js/main.chunk.js"></script>
+<script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+  <script src="https://federicozacayan.github.io/tutorial/js/prism.js"></script>
+
+
+
+</body></html>
